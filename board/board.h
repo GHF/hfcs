@@ -1,7 +1,7 @@
 /*
     ChibiOS/RT - Copyright (C) 2006,2007,2008,2009,2010,
                  2011,2012 Giovanni Di Sirio.
-    Modifications (C) 2012 Xo Wang
+    Modifications (C) 2012-2013 Xo Wang
 
     This file is part of ChibiOS/RT.
 
@@ -30,14 +30,14 @@
 #define _BOARD_H_
 
 /*
- * Setup for Gyro King Tortilla board (based on STMicroelectronics STM32F4-Discovery board files).
+ * Setup for High Fructose board (based on STMicroelectronics STM32F4-Discovery board files).
  */
 
 /*
  * Board identifier.
  */
 #define BOARD_TORTILLA_V2_0
-#define BOARD_NAME              "Tortilla v2.0 (C) 2012 Xo Wang"
+#define BOARD_NAME              "High Fructose v0.0 (C) 2013 Xo Wang"
 
 /*
  * Board frequencies.
@@ -60,44 +60,37 @@
 /*
  * IO pins assignments.
  */
-#define GPIOA_BT_CTS            0
-#define GPIOA_BT_RTS            1
-#define GPIOA_BT_TX             2
-#define GPIOA_BT_RX             3
-#define GPIOA_ADC_NSS           4
-#define GPIOA_ADC_SCK           5
-#define GPIOA_ADC_MISO          6
-#define GPIOA_ADC_MOSI          7
-#define GPIOA_U1_TX             9
-#define GPIOA_U1_RX             10
+#define GPIOA_LEDP              1
+#define GPIOA_LEDQ              2
+#define GPIOA_LEDR              3
+#define GPIOA_PWM_AB            8
+#define GPIOA_MTR_B             9
+#define GPIOA_MTR_X             10
+#define GPIOA_PWM_XY            11
+#define GPIOA_MTR_Y             12
 #define GPIOA_SWDIO             13
 #define GPIOA_SWCLK             14
-#define GPIOA_M2_TACHO          15
+#define GPIOA_RX_PPM            15
 
-#define GPIOB_LED1              0
 #define GPIOB_M1_PWM            1
-#define GPIOB_HALL              3
-#define GPIOB_MPU_SDA           7
-#define GPIOB_MPU_SCL           8
-#define GPIOB_LED2              10
+#define GPIOB_SWO               3
+#define GPIOB_GYRO_SDA          7
+#define GPIOB_GYRO_SCL          8
 #define GPIOB_M1_TACHO          11
-#define GPIOB_LEDY              12
+#define GPIOB_MTR_EN            12
 #define GPIOB_M1_SCK            13
 #define GPIOB_M1_MISO           14
 #define GPIOB_M1_MOSI           15
 
-#define GPIOC_LEDB              4
 #define GPIOC_M1_DIAG           5
-#define GPIOC_M1_NSS            6
-#define GPIOC_M2_DIAG           7
-#define GPIOC_M2_PWM            8
-#define GPIOC_M2_SCK            10
-#define GPIOC_M2_MISO           11
-#define GPIOC_M2_MOSI           12
+#define GPIOC_UART_TX           6
+#define GPIOC_UART_RX           7
+#define GPIOC_M1_NSS            8
+#define GPIOC_MTR_A             9
+#define GPIOC_BUT1              13
 
 #define GPIOD_OSC_IN            0
 #define GPIOD_OSC_OUT           1
-#define GPIOD_M2_NSS            2
 
 /*
  * I/O ports initial setup, this configuration is established soon after reset
@@ -122,97 +115,92 @@
 /*
  * Port A setup.
  */
-#define VAL_GPIOA_MODER     (PIN_MODE_ALTERNATE(GPIOA_BT_CTS) |             \
-                             PIN_MODE_ALTERNATE(GPIOA_BT_RTS) |             \
-                             PIN_MODE_ALTERNATE(GPIOA_BT_TX) |              \
-                             PIN_MODE_ALTERNATE(GPIOA_BT_RX) |              \
-                             PIN_MODE_OUTPUT(GPIOA_ADC_NSS) |               \
-                             PIN_MODE_ALTERNATE(GPIOA_ADC_SCK) |            \
-                             PIN_MODE_ALTERNATE(GPIOA_ADC_MISO) |           \
-                             PIN_MODE_ALTERNATE(GPIOA_ADC_MOSI) |           \
-                             PIN_MODE_INPUT(8) |                            \
-                             PIN_MODE_ALTERNATE(GPIOA_U1_TX) |              \
-                             PIN_MODE_ALTERNATE(GPIOA_U1_RX) |              \
-                             PIN_MODE_INPUT(11) |                           \
-                             PIN_MODE_INPUT(12) |                           \
+#define VAL_GPIOA_MODER     (PIN_MODE_OUTPUT(0) |                           \
+                             PIN_MODE_OUTPUT(GPIOA_LEDP) |                  \
+                             PIN_MODE_OUTPUT(GPIOA_LEDQ) |                  \
+                             PIN_MODE_OUTPUT(GPIOA_LEDR) |                  \
+                             PIN_MODE_INPUT(4) |                            \
+                             PIN_MODE_INPUT(5) |                            \
+                             PIN_MODE_INPUT(6) |                            \
+                             PIN_MODE_INPUT(7) |                            \
+                             PIN_MODE_ALTERNATE(GPIOA_PWM_AB) |             \
+                             PIN_MODE_OUTPUT(GPIOA_MTR_B) |                 \
+                             PIN_MODE_OUTPUT(GPIOA_MTR_X) |                 \
+                             PIN_MODE_ALTERNATE(GPIOA_PWM_XY) |             \
+                             PIN_MODE_OUTPUT(GPIOA_MTR_Y) |                 \
                              PIN_MODE_ALTERNATE(GPIOA_SWDIO) |              \
                              PIN_MODE_ALTERNATE(GPIOA_SWCLK) |              \
-                             PIN_MODE_ALTERNATE(GPIOA_M2_TACHO))
+                             PIN_MODE_ALTERNATE(GPIOA_RX_PPM))
 #define VAL_GPIOA_OTYPER    0x00000000
 #define VAL_GPIOA_OSPEEDR   0xFFFFFFFF
-#define VAL_GPIOA_PUPDR     (PIN_PUDR_FLOATING(GPIOA_BT_CTS) |              \
-                             PIN_PUDR_FLOATING(GPIOA_BT_RTS) |              \
-                             PIN_PUDR_FLOATING(GPIOA_BT_TX) |               \
-                             PIN_PUDR_FLOATING(GPIOA_BT_RX) |               \
-                             PIN_PUDR_FLOATING(GPIOA_ADC_NSS) |             \
-                             PIN_PUDR_FLOATING(GPIOA_ADC_SCK) |             \
-                             PIN_PUDR_FLOATING(GPIOA_ADC_MISO) |            \
-                             PIN_PUDR_FLOATING(GPIOA_ADC_MOSI) |            \
-                             PIN_PUDR_PULLUP(8) |                           \
-                             PIN_PUDR_FLOATING(GPIOA_U1_TX) |               \
-                             PIN_PUDR_FLOATING(GPIOA_U1_RX) |               \
-                             PIN_PUDR_PULLUP(11) |                          \
-                             PIN_PUDR_PULLUP(12) |                          \
+#define VAL_GPIOA_PUPDR     (PIN_PUDR_PULLUP(0) |                           \
+                             PIN_PUDR_FLOATING(GPIOA_LEDP) |                \
+                             PIN_PUDR_FLOATING(GPIOA_LEDQ) |                \
+                             PIN_PUDR_FLOATING(GPIOA_LEDR) |                \
+                             PIN_PUDR_PULLUP(4) |                           \
+                             PIN_PUDR_PULLUP(5) |                           \
+                             PIN_PUDR_PULLUP(6) |                           \
+                             PIN_PUDR_PULLUP(7) |                           \
+                             PIN_PUDR_FLOATING(GPIOA_PWM_AB) |              \
+                             PIN_PUDR_FLOATING(GPIOA_MTR_B) |               \
+                             PIN_PUDR_FLOATING(GPIOA_MTR_X) |               \
+                             PIN_PUDR_FLOATING(GPIOA_PWM_XY) |              \
+                             PIN_PUDR_FLOATING(GPIOA_MTR_Y) |               \
                              PIN_PUDR_PULLUP(GPIOA_SWDIO) |                 \
                              PIN_PUDR_PULLDOWN(GPIOA_SWCLK) |               \
-                             PIN_PUDR_FLOATING(GPIOA_M2_TACHO))
+                             PIN_PUDR_PULLUP(GPIOA_RX_PPM))
 #define VAL_GPIOA_ODR       0xFFFFFFFF
-#define VAL_GPIOA_AFRL      (PIN_AFIO_AF(GPIOA_BT_CTS, 7) |                 \
-                             PIN_AFIO_AF(GPIOA_BT_RTS, 7) |                 \
-                             PIN_AFIO_AF(GPIOA_BT_TX, 7) |                  \
-                             PIN_AFIO_AF(GPIOA_BT_RX, 7) |                  \
-                             PIN_AFIO_AF(GPIOA_ADC_SCK, 5) |                \
-                             PIN_AFIO_AF(GPIOA_ADC_MISO, 5) |               \
-                             PIN_AFIO_AF(GPIOA_ADC_MOSI, 5))
-#define VAL_GPIOA_AFRH      (PIN_AFIO_AF(GPIOA_U1_TX, 7) |                  \
-                             PIN_AFIO_AF(GPIOA_U1_RX, 7) |                  \
+#define VAL_GPIOA_AFRL      0x00000000
+#define VAL_GPIOA_AFRH      (PIN_AFIO_AF(GPIOA_PWM_AB, 1) |                 \
+                             PIN_AFIO_AF(GPIOA_PWM_XY, 1) |                 \
                              PIN_AFIO_AF(GPIOA_SWDIO, 0) |                  \
                              PIN_AFIO_AF(GPIOA_SWCLK, 0) |                  \
-                             PIN_AFIO_AF(GPIOA_M2_TACHO, 1))
+                             PIN_AFIO_AF(GPIOA_RX_PPM, 1))
 
 /*
  * Port B setup.
  */
-#define VAL_GPIOB_MODER     (PIN_MODE_OUTPUT(GPIOB_LED1) |                  \
+#define VAL_GPIOB_MODER     (PIN_MODE_INPUT(0) |                            \
                              PIN_MODE_ALTERNATE(GPIOB_M1_PWM) |             \
                              PIN_MODE_INPUT(2) |                            \
-                             PIN_MODE_ALTERNATE(GPIOB_HALL) |               \
+                             PIN_MODE_ALTERNATE(GPIOB_SWO) |                \
                              PIN_MODE_INPUT(4) |                            \
                              PIN_MODE_INPUT(5) |                            \
                              PIN_MODE_INPUT(6) |                            \
-                             PIN_MODE_ALTERNATE(GPIOB_MPU_SDA) |            \
-                             PIN_MODE_ALTERNATE(GPIOB_MPU_SCL) |            \
+                             PIN_MODE_ALTERNATE(GPIOB_GYRO_SDA) |           \
+                             PIN_MODE_ALTERNATE(GPIOB_GYRO_SCL) |           \
                              PIN_MODE_INPUT(9) |                            \
-                             PIN_MODE_OUTPUT(GPIOB_LED2) |                  \
+                             PIN_MODE_INPUT(10) |                           \
                              PIN_MODE_ALTERNATE(GPIOB_M1_TACHO) |           \
-                             PIN_MODE_OUTPUT(GPIOB_LEDY) |                  \
+                             PIN_MODE_OUTPUT(GPIOB_MTR_EN) |                \
                              PIN_MODE_ALTERNATE(GPIOB_M1_SCK) |             \
                              PIN_MODE_ALTERNATE(GPIOB_M1_MISO) |            \
                              PIN_MODE_ALTERNATE(GPIOB_M1_MOSI))
-#define VAL_GPIOB_OTYPER    (PIN_OTYPE_OPENDRAIN(GPIOB_MPU_SDA) |           \
-                             PIN_OTYPE_OPENDRAIN(GPIOB_MPU_SCL))
+#define VAL_GPIOB_OTYPER    (PIN_OTYPE_OPENDRAIN(GPIOB_GYRO_SDA) |          \
+                             PIN_OTYPE_OPENDRAIN(GPIOB_GYRO_SCL) |          \
+                             PIN_OTYPE_OPENDRAIN(GPIOB_MTR_EN))
 #define VAL_GPIOB_OSPEEDR   0xFFFFFFFF
-#define VAL_GPIOB_PUPDR     (PIN_PUDR_FLOATING(GPIOB_LED1) |                \
+#define VAL_GPIOB_PUPDR     (PIN_PUDR_PULLUP(0) |                           \
                              PIN_PUDR_FLOATING(GPIOB_M1_PWM) |              \
                              PIN_PUDR_PULLUP(2) |                           \
-                             PIN_PUDR_FLOATING(GPIOB_HALL) |                \
+                             PIN_PUDR_FLOATING(GPIOB_SWO) |                 \
                              PIN_PUDR_PULLUP(4) |                           \
                              PIN_PUDR_PULLUP(5) |                           \
                              PIN_PUDR_PULLUP(6) |                           \
-                             PIN_PUDR_PULLUP(GPIOB_MPU_SDA) |               \
-                             PIN_PUDR_PULLUP(GPIOB_MPU_SCL) |               \
+                             PIN_PUDR_PULLUP(GPIOB_GYRO_SDA) |              \
+                             PIN_PUDR_PULLUP(GPIOB_GYRO_SCL) |              \
                              PIN_PUDR_PULLUP(9) |                           \
-                             PIN_PUDR_FLOATING(GPIOB_LED2) |                \
+                             PIN_PUDR_PULLUP(10) |                          \
                              PIN_PUDR_FLOATING(GPIOB_M1_TACHO) |            \
-                             PIN_PUDR_FLOATING(GPIOB_LEDY) |                \
+                             PIN_PUDR_PULLUP(GPIOB_MTR_EN) |                \
                              PIN_PUDR_FLOATING(GPIOB_M1_SCK) |              \
                              PIN_PUDR_FLOATING(GPIOB_M1_SCK) |              \
                              PIN_PUDR_FLOATING(GPIOB_M1_MOSI))
 #define VAL_GPIOB_ODR       0xFFFFFFFF
 #define VAL_GPIOB_AFRL      (PIN_AFIO_AF(GPIOB_M1_PWM, 2) |                 \
-                             PIN_AFIO_AF(GPIOB_HALL, 1) |                   \
-                             PIN_AFIO_AF(GPIOB_MPU_SDA, 4))
-#define VAL_GPIOB_AFRH      (PIN_AFIO_AF(GPIOB_MPU_SCL, 4) |                \
+                             PIN_AFIO_AF(GPIOB_SWO, 0) |                    \
+                             PIN_AFIO_AF(GPIOB_GYRO_SDA, 4))
+#define VAL_GPIOB_AFRH      (PIN_AFIO_AF(GPIOB_GYRO_SCL, 4) |               \
                              PIN_AFIO_AF(GPIOB_M1_TACHO, 1) |               \
                              PIN_AFIO_AF(GPIOB_M1_SCK, 5) |                 \
                              PIN_AFIO_AF(GPIOB_M1_MISO, 5) |                \
@@ -225,16 +213,16 @@
                              PIN_MODE_INPUT(1) |                            \
                              PIN_MODE_INPUT(2) |                            \
                              PIN_MODE_INPUT(3) |                            \
-                             PIN_MODE_OUTPUT(GPIOC_LEDB) |                  \
+                             PIN_MODE_INPUT(4) |                            \
                              PIN_MODE_INPUT(GPIOC_M1_DIAG) |                \
+                             PIN_MODE_ALTERNATE(GPIOC_UART_TX) |            \
+                             PIN_MODE_ALTERNATE(GPIOC_UART_RX) |            \
                              PIN_MODE_OUTPUT(GPIOC_M1_NSS) |                \
-                             PIN_MODE_INPUT(GPIOC_M2_DIAG) |                \
-                             PIN_MODE_ALTERNATE(GPIOC_M2_PWM) |             \
-                             PIN_MODE_INPUT(9) |                            \
-                             PIN_MODE_ALTERNATE(GPIOC_M2_SCK) |             \
-                             PIN_MODE_ALTERNATE(GPIOC_M2_MISO) |            \
-                             PIN_MODE_ALTERNATE(GPIOC_M2_MOSI) |            \
-                             PIN_MODE_INPUT(13) |                           \
+                             PIN_MODE_OUTPUT(GPIOC_MTR_A) |                 \
+                             PIN_MODE_INPUT(10) |                           \
+                             PIN_MODE_INPUT(11) |                           \
+                             PIN_MODE_INPUT(12) |                           \
+                             PIN_MODE_INPUT(GPIOC_BUT1) |                   \
                              PIN_MODE_INPUT(14) |                           \
                              PIN_MODE_INPUT(15))
 #define VAL_GPIOC_OTYPER    0x00000000
@@ -243,31 +231,29 @@
                              PIN_PUDR_PULLUP(1) |                           \
                              PIN_PUDR_PULLUP(2) |                           \
                              PIN_PUDR_PULLUP(3) |                           \
-                             PIN_PUDR_FLOATING(GPIOC_LEDB) |                \
+                             PIN_PUDR_PULLUP(4) |                           \
                              PIN_PUDR_FLOATING(GPIOC_M1_DIAG) |             \
+                             PIN_PUDR_PULLUP(GPIOC_UART_TX) |               \
+                             PIN_PUDR_PULLUP(GPIOC_UART_RX) |               \
                              PIN_PUDR_FLOATING(GPIOC_M1_NSS) |              \
-                             PIN_PUDR_FLOATING(GPIOC_M2_DIAG) |             \
-                             PIN_PUDR_FLOATING(GPIOC_M2_PWM) |              \
-                             PIN_PUDR_PULLUP(9) |                           \
-                             PIN_PUDR_FLOATING(GPIOC_M2_SCK) |              \
-                             PIN_PUDR_FLOATING(GPIOC_M2_MISO) |             \
-                             PIN_PUDR_FLOATING(GPIOC_M2_MOSI) |             \
-                             PIN_PUDR_PULLUP(13) |                          \
+                             PIN_PUDR_FLOATING(GPIOC_MTR_A) |               \
+                             PIN_PUDR_PULLUP(10) |                          \
+                             PIN_PUDR_PULLUP(11) |                          \
+                             PIN_PUDR_PULLUP(12) |                          \
+                             PIN_PUDR_PULLUP(GPIOC_BUT1) |                  \
                              PIN_PUDR_PULLUP(14) |                          \
                              PIN_PUDR_PULLUP(15))
 #define VAL_GPIOC_ODR       0xFFFFFFFF
-#define VAL_GPIOC_AFRL      0x00000000
-#define VAL_GPIOC_AFRH      (PIN_AFIO_AF(GPIOC_M2_PWM, 2) |                 \
-                             PIN_AFIO_AF(GPIOC_M2_SCK, 6) |                 \
-                             PIN_AFIO_AF(GPIOC_M2_MISO, 6) |                \
-                             PIN_AFIO_AF(GPIOC_M2_MOSI, 6))
+#define VAL_GPIOC_AFRL      (PIN_AFIO_AF(GPIOC_UART_TX, 8) |                \
+                             PIN_AFIO_AF(GPIOC_UART_RX, 8))
+#define VAL_GPIOC_AFRH      0x00000000
 
 /*
  * Port D setup.
  */
 #define VAL_GPIOD_MODER     (PIN_MODE_INPUT(GPIOD_OSC_IN) |                 \
                              PIN_MODE_INPUT(GPIOD_OSC_OUT) |                \
-                             PIN_MODE_OUTPUT(GPIOD_M2_NSS) |                \
+                             PIN_MODE_INPUT(2) |                            \
                              PIN_MODE_INPUT(3) |                            \
                              PIN_MODE_INPUT(4) |                            \
                              PIN_MODE_INPUT(5) |                            \
@@ -285,7 +271,7 @@
 #define VAL_GPIOD_OSPEEDR   0xFFFFFFFF
 #define VAL_GPIOD_PUPDR     (PIN_PUDR_FLOATING(0) |                         \
                              PIN_PUDR_FLOATING(1) |                         \
-                             PIN_PUDR_FLOATING(2) |                         \
+                             PIN_PUDR_PULLUP(2) |                           \
                              PIN_PUDR_PULLUP(3) |                           \
                              PIN_PUDR_PULLUP(4) |                           \
                              PIN_PUDR_PULLUP(5) |                           \

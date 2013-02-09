@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2011--2012 Xo Wang
+ *  Copyright (C) 2012-2013 Xo Wang
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to
@@ -23,24 +23,24 @@
  *  in this Software without prior written authorization from Xo Wang.
  */
 
-#ifndef ADS1259_H_
-#define ADS1259_H_
+#ifndef TORTILLA_H_
+#define TORTILLA_H_
 
-#include "Tortilla.h"
+#define NORETURN __attribute__((noreturn))
+#define ALIGNED(x) __attribute__((aligned(x)))
 
-class ADS1259 {
-public:
-    ADS1259(SPIDriver *spip);
+#define M1_SPI (SPID2)
 
-    bool read(int32_t &reading);
+#define PWM_FREQ 20000
+#define PWM_PERIOD (STM32_TIMCLK1 / PWM_FREQ)
 
-protected:
-    SPIDriver * const spip;
-    static const uint8_t config[2];
-    static const uint8_t OP_START;
+#define DC_PWM (PWMD1)
+#define DC_PWM_AB_CHAN (0)
+#define DC_PWM_XY_CHAN (3)
 
-    void writeReg(uint8_t addr, uint8_t n, const uint8_t *data);
-    void start();
-};
+#define M1_PWM (PWMD3)
+#define M1_PWM_CHAN (3)
 
-#endif /* ADS1259_H_ */
+#define DBG_SERIAL (SD6)
+
+#endif /* TORTILLA_H_ */

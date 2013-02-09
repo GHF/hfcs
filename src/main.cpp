@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012 Xo Wang
+ *  Copyright (C) 2012-2013 Xo Wang
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to
@@ -26,27 +26,21 @@
 #include "ch.h"
 #include "hal.h"
 
-#include "Tortilla.h"
+#include "HFCS.h"
 #include "A4960.h"
-#include "ADS1259.h"
 #include "chprintf.h"
 
 // heartbeat thread
-//static WORKING_AREA(waHeartbeat, 128);
-//NORETURN static void threadHeartbeat(void *arg) {
-//    (void) arg;
-//    chRegSetThreadName("heartbeat");
-//    while (TRUE) {
-//        palTogglePad(GPIOB, GPIOB_LED2);
-//        chThdSleepMilliseconds(1000);
-//    }
-//    chThdExit(0);
-//}
-
-static WORKING_AREA(waIO, 8192);
-NORETURN static void threadIO(void *tortilla) {
-    chRegSetThreadName("IO");
-    static_cast<Tortilla *>(tortilla)->ioLoop();
+static WORKING_AREA(waHeartbeat, 128);
+NORETURN static void threadHeartbeat(void *arg) {
+    (void) arg;
+    chRegSetThreadName("heartbeat");
+    while (TRUE) {
+        palSetPad(GPIOA, GPIOA_LEDP);
+        chThdSleepMilliseconds(100);
+        palClearPad(GPIOA, GPIOA_LEDP);
+        chThdSleepMilliseconds(900);
+    }
     chThdExit(0);
 }
 
@@ -56,48 +50,41 @@ int main(void) {
 
     chThdSleepMilliseconds(200);
 
-    // input capture & high-res timer
-    const ICUConfig icuConfig = { ICU_INPUT_ACTIVE_HIGH, 1000000, nullptr, nullptr, nullptr, nullptr, nullptr };
-    icuStart(&TIMING_ICU, &icuConfig);
-    icuEnable(&TIMING_ICU);
-
     // serial setup
-    const SerialConfig btSerialConfig = { 921600, 0, USART_CR2_STOP1_BITS, USART_CR3_CTSE | USART_CR3_RTSE };
-    sdStart(&BT_SERIAL, &btSerialConfig);
+    const SerialConfig dbgSerialConfig = { 921600, 0, USART_CR2_STOP1_BITS, USART_CR3_CTSE | USART_CR3_RTSE };
+    sdStart(&DBG_SERIAL, &dbgSerialConfig);
 
-    // PWM setup
+    // VNH5050A PWM setup
+    const PWMConfig dcPWMConfig = { STM32_TIMCLK1, PWM_PERIOD, nullptr, {
+            { PWM_OUTPUT_ACTIVE_HIGH, nullptr },
+            { PWM_OUTPUT_DISABLED, nullptr },
+            { PWM_OUTPUT_DISABLED, nullptr },
+            { PWM_OUTPUT_ACTIVE_HIGH, nullptr } }, 0, };
+    pwmStart(&DC_PWM, &dcPWMConfig);
+
+    // A4960 PWM setup
     const PWMConfig mPWMConfig = { STM32_TIMCLK1, PWM_PERIOD, nullptr, {
             { PWM_OUTPUT_DISABLED, nullptr },
             { PWM_OUTPUT_DISABLED, nullptr },
-            { PWM_OUTPUT_ACTIVE_HIGH, nullptr },
+            { PWM_OUTPUT_DISABLED, nullptr },
             { PWM_OUTPUT_ACTIVE_HIGH, nullptr } }, 0, };
     pwmStart(&M1_PWM, &mPWMConfig);
 
     // SPI setup
     // speed = pclk/8 = 5.25MHz
     const SPIConfig m1SPIConfig = { NULL, GPIOC, GPIOC_M1_NSS, SPI_CR1_DFF | SPI_CR1_BR_1 };
-    const SPIConfig m2SPIConfig = { NULL, GPIOD, GPIOD_M2_NSS, SPI_CR1_DFF | SPI_CR1_BR_1 };
-    const SPIConfig adcSPIConfig = { NULL, GPIOA, GPIOA_ADC_NSS, SPI_CR1_BR_2 | SPI_CR1_CPHA };
     spiStart(&M1_SPI, &m1SPIConfig);
-    spiStart(&M2_SPI, &m2SPIConfig);
-    spiStart(&ADC_SPI, &adcSPIConfig);
 
     // motor setup
     A4960 m1(&M1_SPI, &M1_PWM, M1_PWM_CHAN);
-    A4960 m2(&M2_SPI, &M2_PWM, M2_PWM_CHAN);
-
-    // ADC setup
-    ADS1259 adc(&ADC_SPI);
-
-    // initialize control structure
-    Tortilla tortilla(m1, m2, adc, &TIMING_ICU, &BT_SERIAL);
 
     // start slave threads
-//    chThdCreateStatic(waHeartbeat, sizeof(waHeartbeat), IDLEPRIO, tfunc_t(threadHeartbeat), nullptr);
-    chThdCreateStatic(waIO, sizeof(waIO), LOWPRIO, tfunc_t(threadIO), &tortilla);
+    chThdCreateStatic(waHeartbeat, sizeof(waHeartbeat), IDLEPRIO, tfunc_t(threadHeartbeat), nullptr);
 
     // done with setup
-    palClearPad(GPIOC, GPIOC_LEDB);
-    palClearPad(GPIOB, GPIOB_LED2);
-    tortilla.fastLoop();
+    palClearPad(GPIOA, GPIOA_LEDQ);
+    palClearPad(GPIOA, GPIOA_LEDR);
+    while (true) {
+        chThdSleepMilliseconds(1000);
+    }
 }

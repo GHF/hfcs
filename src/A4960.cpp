@@ -26,7 +26,7 @@
 #include "ch.h"
 #include "hal.h"
 
-#include "Tortilla.h"
+#include "HFCS.h"
 #include "A4960.h"
 #include "chprintf.h"
 
@@ -48,7 +48,7 @@ A4960::A4960(SPIDriver *spip, PWMDriver *pwmp, pwmchannel_t channel) :
         spip(spip), pwmp(pwmp), channel(channel) {
     for (size_t addr = 0; addr < 8U; addr++) {
         uint16_t diag = writeReg(addr, config[addr]);
-        chprintf((BaseChannel *) &BT_SERIAL, "[%d] 0x%x: 0x%x\r\n", channel, addr, diag);
+        chprintf((BaseChannel *) &DBG_SERIAL, "[%d] 0x%x: 0x%x\r\n", channel, addr, diag);
         chThdSleepMilliseconds(1);
     }
     pwmEnableChannel(pwmp, channel, 0);

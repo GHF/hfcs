@@ -87,9 +87,6 @@ CSRC = $(PORTSRC) \
 # setting.
 CPPSRC = src/main.cpp \
 		 src/A4960.cpp \
-		 src/ADS1259.cpp \
-		 src/Tortilla_control.cpp \
-		 src/Tortilla_io.cpp \
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
