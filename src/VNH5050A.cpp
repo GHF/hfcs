@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012-2013 Xo Wang
+ *  Copyright (C) 2013 Xo Wang
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to
@@ -23,27 +23,15 @@
  *  in this Software without prior written authorization from Xo Wang.
  */
 
-#ifndef TORTILLA_H_
-#define TORTILLA_H_
+#include "VNH5050A.h"
 
-#define NORETURN __attribute__((noreturn))
-#define ALIGNED(x) __attribute__((aligned(x)))
-
-#define M1_SPI (SPID2)
-
-#define M1_PWM_FREQ 20000
-#define M1_PWM_PERIOD (STM32_TIMCLK1 / M1_PWM_FREQ)
-
-#define M1_PWM (PWMD3)
-#define M1_PWM_CHAN (3)
-
-#define DC_PWM_FREQ 16000
-#define DC_PWM_PERIOD (STM32_TIMCLK1 / DC_PWM_FREQ)
-
-#define DC_PWM (PWMD1)
-#define DC_PWM_AB_CHAN (0)
-#define DC_PWM_XY_CHAN (3)
-
-#define DBG_SERIAL (SD6)
-
-#endif /* TORTILLA_H_ */
+VNH5050A::VNH5050A(
+        PWMDriver *pwmp,
+        pwmchannel_t channel,
+        GPIO_TypeDef *port1,
+        uint16_t pad1,
+        GPIO_TypeDef *port2,
+        uint16_t pad2) :
+        pwmp(pwmp), channel(channel), port1(port1), pad1(pad1), port2(port2), pad2(pad2) {
+    setSpeed(0);
+}

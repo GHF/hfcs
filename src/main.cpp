@@ -28,7 +28,7 @@
 
 #include "HFCS.h"
 #include "A4960.h"
-#include "chprintf.h"
+#include "VNH5050A.h"
 
 // heartbeat thread
 static WORKING_AREA(waHeartbeat, 128);
@@ -36,10 +36,10 @@ NORETURN static void threadHeartbeat(void *arg) {
     (void) arg;
     chRegSetThreadName("heartbeat");
     while (TRUE) {
-        palSetPad(GPIOA, GPIOA_LEDP);
-        chThdSleepMilliseconds(100);
         palClearPad(GPIOA, GPIOA_LEDP);
         chThdSleepMilliseconds(900);
+        palSetPad(GPIOA, GPIOA_LEDP);
+        chThdSleepMilliseconds(100);
     }
     chThdExit(0);
 }
@@ -51,19 +51,23 @@ int main(void) {
     chThdSleepMilliseconds(200);
 
     // serial setup
-    const SerialConfig dbgSerialConfig = { 921600, 0, USART_CR2_STOP1_BITS, USART_CR3_CTSE | USART_CR3_RTSE };
+    const SerialConfig dbgSerialConfig = { 115200, 0, USART_CR2_STOP1_BITS, USART_CR3_CTSE | USART_CR3_RTSE };
     sdStart(&DBG_SERIAL, &dbgSerialConfig);
 
     // VNH5050A PWM setup
-    const PWMConfig dcPWMConfig = { STM32_TIMCLK1, PWM_PERIOD, nullptr, {
+    const PWMConfig dcPWMConfig = { STM32_TIMCLK1, DC_PWM_PERIOD, nullptr, {
             { PWM_OUTPUT_ACTIVE_HIGH, nullptr },
             { PWM_OUTPUT_DISABLED, nullptr },
             { PWM_OUTPUT_DISABLED, nullptr },
             { PWM_OUTPUT_ACTIVE_HIGH, nullptr } }, 0, };
     pwmStart(&DC_PWM, &dcPWMConfig);
 
+    // DC motor setup
+    VNH5050A dcAB(&DC_PWM, DC_PWM_AB_CHAN, GPIOC, GPIOC_MTR_A, GPIOA, GPIOA_MTR_B);
+    VNH5050A dcXY(&DC_PWM, DC_PWM_XY_CHAN, GPIOA, GPIOA_MTR_X, GPIOA, GPIOA_MTR_Y);
+
     // A4960 PWM setup
-    const PWMConfig mPWMConfig = { STM32_TIMCLK1, PWM_PERIOD, nullptr, {
+    const PWMConfig mPWMConfig = { STM32_TIMCLK1, M1_PWM_PERIOD, nullptr, {
             { PWM_OUTPUT_DISABLED, nullptr },
             { PWM_OUTPUT_DISABLED, nullptr },
             { PWM_OUTPUT_DISABLED, nullptr },
@@ -75,7 +79,7 @@ int main(void) {
     const SPIConfig m1SPIConfig = { NULL, GPIOC, GPIOC_M1_NSS, SPI_CR1_DFF | SPI_CR1_BR_1 };
     spiStart(&M1_SPI, &m1SPIConfig);
 
-    // motor setup
+    // weapon motor setup
     A4960 m1(&M1_SPI, &M1_PWM, M1_PWM_CHAN);
 
     // start slave threads

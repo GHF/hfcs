@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2012-2013 Xo Wang
+ *  Copyright (C) 2013 Xo Wang
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to
@@ -23,27 +23,49 @@
  *  in this Software without prior written authorization from Xo Wang.
  */
 
-#ifndef TORTILLA_H_
-#define TORTILLA_H_
+#ifndef VNH5050A_H_
+#define VNH5050A_H_
 
-#define NORETURN __attribute__((noreturn))
-#define ALIGNED(x) __attribute__((aligned(x)))
+#include "ch.h"
+#include "hal.h"
 
-#define M1_SPI (SPID2)
+class VNH5050A {
+public:
+    VNH5050A(
+            PWMDriver *pwmp,
+            pwmchannel_t channel,
+            GPIO_TypeDef *port1,
+            uint16_t pad1,
+            GPIO_TypeDef *port2,
+            uint16_t pad2);
 
-#define M1_PWM_FREQ 20000
-#define M1_PWM_PERIOD (STM32_TIMCLK1 / M1_PWM_FREQ)
+    void setSpeed(int32_t speed) {
+        if (speed == 0) {
+            palSetPad(port1, pad1);
+            palSetPad(port2, pad2);
+            pwmEnableChannel(pwmp, channel, 0);
+        } else if (speed < 0) {
+            palClearPad(port1, pad1);
+            palSetPad(port2, pad2);
+            pwmEnableChannel(pwmp, channel, -speed);
+        } else {
+            palSetPad(port1, pad1);
+            palClearPad(port2, pad2);
+            pwmEnableChannel(pwmp, channel, speed);
+        }
+    }
 
-#define M1_PWM (PWMD3)
-#define M1_PWM_CHAN (3)
+    pwmcnt_t getRange() {
+        return pwmp->period;
+    }
 
-#define DC_PWM_FREQ 16000
-#define DC_PWM_PERIOD (STM32_TIMCLK1 / DC_PWM_FREQ)
+protected:
+    PWMDriver * const pwmp;
+    const pwmchannel_t channel;
+    GPIO_TypeDef * const port1;
+    const uint16_t pad1;
+    GPIO_TypeDef * const port2;
+    const uint16_t pad2;
+};
 
-#define DC_PWM (PWMD1)
-#define DC_PWM_AB_CHAN (0)
-#define DC_PWM_XY_CHAN (3)
-
-#define DBG_SERIAL (SD6)
-
-#endif /* TORTILLA_H_ */
+#endif /* VNH5050A_H_ */
