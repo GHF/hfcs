@@ -148,7 +148,7 @@
                              PIN_PUDR_FLOATING(GPIOA_MTR_Y) |               \
                              PIN_PUDR_PULLUP(GPIOA_SWDIO) |                 \
                              PIN_PUDR_PULLDOWN(GPIOA_SWCLK) |               \
-                             PIN_PUDR_PULLUP(GPIOA_RX_PPM))
+                             PIN_PUDR_PULLDOWN(GPIOA_RX_PPM))
 #define VAL_GPIOA_ODR       0xFFFFFFFF
 #define VAL_GPIOA_AFRL      0x00000000
 #define VAL_GPIOA_AFRH      (PIN_AFIO_AF(GPIOA_PWM_AB, 1) |                 \
