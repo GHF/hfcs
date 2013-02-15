@@ -40,6 +40,10 @@ public:
         writeReg(0x7, cfg);
     }
 
+    pwmcnt_t getRange() const {
+        return pwmp->period;
+    }
+
     void setWidth(pwmcnt_t width) {
         pwmEnableChannel(pwmp, channel, width);
     }

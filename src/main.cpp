@@ -44,6 +44,15 @@ NORETURN static void threadHeartbeat(void *arg) {
     chThdExit(0);
 }
 
+// failsafe thread
+static WORKING_AREA(waFailsafe, 128);
+NORETURN static void threadFailsafe(void *arg) {
+    (void) arg;
+    chRegSetThreadName("failsafe");
+    static_cast<HFCS *>(arg)->failsafeLoop();
+    chThdExit(0);
+}
+
 int main(void) {
     halInit();
     chSysInit();
@@ -82,13 +91,22 @@ int main(void) {
     // weapon motor setup
     A4960 m1(&M1_SPI, &M1_PWM, M1_PWM_CHAN);
 
+    // input capture & high-res timer
+    const ICUConfig icuConfig = { ICU_INPUT_ACTIVE_LOW, 1000000, HFCS::icuWidthCb, HFCS::icuPeriodCb };
+    icuStart(&PPM_ICU, &icuConfig);
+
+    // initialize control loop
+    HFCS hfcs(m1, dcAB, dcXY, &PPM_ICU);
+    HFCS::instance = &hfcs;
+
     // start slave threads
     chThdCreateStatic(waHeartbeat, sizeof(waHeartbeat), IDLEPRIO, tfunc_t(threadHeartbeat), nullptr);
+    chThdCreateStatic(waFailsafe, sizeof(waFailsafe), LOWPRIO, tfunc_t(threadFailsafe), &hfcs);
 
     // done with setup
     palClearPad(GPIOA, GPIOA_LEDQ);
     palClearPad(GPIOA, GPIOA_LEDR);
-    while (true) {
-        chThdSleepMilliseconds(1000);
-    }
+
+    // start the fast loop
+    hfcs.fastLoop();
 }

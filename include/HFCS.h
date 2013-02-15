@@ -23,8 +23,8 @@
  *  in this Software without prior written authorization from Xo Wang.
  */
 
-#ifndef TORTILLA_H_
-#define TORTILLA_H_
+#ifndef HFCS_H_
+#define HFCS_H_
 
 #define NORETURN __attribute__((noreturn))
 #define ALIGNED(x) __attribute__((aligned(x)))
@@ -37,13 +37,57 @@
 #define M1_PWM (PWMD3)
 #define M1_PWM_CHAN (3)
 
-#define DC_PWM_FREQ 16000
+#define DC_PWM_FREQ 17000
 #define DC_PWM_PERIOD (STM32_TIMCLK1 / DC_PWM_FREQ)
 
 #define DC_PWM (PWMD1)
 #define DC_PWM_AB_CHAN (0)
 #define DC_PWM_XY_CHAN (3)
 
+#define PPM_ICU (ICUD2)
+
 #define DBG_SERIAL (SD6)
 
-#endif /* TORTILLA_H_ */
+class A4960;
+class VNH5050A;
+struct ICUDriver;
+
+class HFCS {
+public:
+    HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup);
+
+    NORETURN void fastLoop();
+    NORETURN void failsafeLoop();
+
+    static HFCS *instance;
+    static void icuWidthCb(ICUDriver *icup);
+    static void icuPeriodCb(ICUDriver *icup);
+
+protected:
+    A4960 &m1;
+    VNH5050A &mLeft;
+    VNH5050A &mRight;
+    ICUDriver * const icup;
+
+    static constexpr size_t NUM_CHANNELS = 5;
+    icucnt_t pulseWidths[NUM_CHANNELS];
+    size_t currentPulse;
+
+    int32_t channels[NUM_CHANNELS];
+    bool channelsValid;
+    systime_t lastValidChannels;
+
+    static icucnt_t negativeWidth;
+    static icucnt_t positiveWidth;
+
+    void newPulse();
+
+    bool checkPulseWidth(icucnt_t pulseWidth) const {
+        if (pulseWidth > 2200 || pulseWidth < 800) {
+            return false;
+        }
+        return true;
+    }
+};
+
+#endif /* HFCS_H_ */
