@@ -88,6 +88,8 @@ protected:
         }
         return true;
     }
+
+    static int32_t mapRanges(int32_t inLow, int32_t inHigh, int32_t inValue, int32_t outLow, int32_t outHigh, int32_t deadband);
 };
 
 #endif /* HFCS_H_ */

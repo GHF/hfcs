@@ -58,18 +58,21 @@ NORETURN void HFCS::fastLoop() {
     systime_t ticks = chTimeNow();
     while (true) {
         if (channelsValid) {
-            constexpr int32_t INPUT_RANGE = 300;
-            const int32_t DC_OUTPUT_RANGE = mLeft.getRange();
-            int32_t aileron = (channels[0] * DC_OUTPUT_RANGE) / INPUT_RANGE;
-            int32_t elevator = (channels[1] * DC_OUTPUT_RANGE) / INPUT_RANGE;
-            aileron = std::min(std::max(aileron, -DC_OUTPUT_RANGE), DC_OUTPUT_RANGE);
-            elevator = std::min(std::max(elevator, -DC_OUTPUT_RANGE), DC_OUTPUT_RANGE);
-            mLeft.setSpeed(elevator - aileron);
-            mRight.setSpeed(elevator + aileron);
+            constexpr int32_t INPUT_LOW = 1200;
+            constexpr int32_t INPUT_HIGH = 1800;
+            constexpr int32_t DEADBAND = 17;
 
-            const int32_t M1_OUTPUT_RANGE = m1.getRange();
-            int32_t throttle = ((channels[2] + INPUT_RANGE) * M1_OUTPUT_RANGE) / (INPUT_RANGE * 2);
-            throttle = std::min(std::max(throttle, 0L), M1_OUTPUT_RANGE);
+            const int32_t DC_OUTPUT_RANGE = mLeft.getRange();
+            const int32_t aileron = mapRanges(INPUT_LOW, INPUT_HIGH, channels[0], -DC_OUTPUT_RANGE, DC_OUTPUT_RANGE, DEADBAND);
+            const int32_t elevator = mapRanges(INPUT_LOW, INPUT_HIGH, channels[1], -DC_OUTPUT_RANGE, DC_OUTPUT_RANGE, DEADBAND);
+
+            const int32_t left = std::min(std::max(elevator - aileron, -DC_OUTPUT_RANGE), DC_OUTPUT_RANGE);
+            const int32_t right = std::min(std::max(elevator + aileron, -DC_OUTPUT_RANGE), DC_OUTPUT_RANGE);
+            mLeft.setSpeed(left);
+            mRight.setSpeed(right);
+
+            const int32_t throttle = mapRanges(INPUT_LOW, INPUT_HIGH, channels[2], 0, m1.getRange(), 0);
+            m1.setWidth(throttle);
         } else {
             m1.setWidth(0);
             mLeft.setSpeed(0);
@@ -111,9 +114,6 @@ void HFCS::newPulse() {
             if (currentPulse >= NUM_CHANNELS) {
                 currentPulse = 0;
                 std::copy(pulseWidths, pulseWidths + NUM_CHANNELS, channels);
-                for (size_t i = 0; i < NUM_CHANNELS; i++) {
-                    channels[i] = pulseWidths[i] - 1500;
-                }
                 palTogglePad(GPIOA, GPIOA_LEDQ);
                 lastValidChannels = chTimeNow();
                 channelsValid = true;
@@ -132,3 +132,34 @@ void HFCS::icuPeriodCb(ICUDriver *icup) {
     positiveWidth = icuGetPeriodI(icup) - negativeWidth;
     instance->newPulse();
 }
+
+static inline int32_t nabs(int32_t i) {
+    return i < 0 ? i : -i;
+}
+
+static inline int32_t avg(int32_t a, int32_t b) {
+    return (a + b) / 2;
+}
+
+static inline int32_t signum(int32_t i) {
+    return (i > 0) - (i < 0);
+}
+
+int32_t HFCS::mapRanges(int32_t inLow, int32_t inHigh, int32_t inValue, int32_t outLow, int32_t outHigh, int32_t deadband) {
+    const int32_t inCenter = avg(inLow, inHigh);
+    int32_t centeredInput = inValue - inCenter;
+    if (nabs(centeredInput) > -deadband) {
+        centeredInput = 0;
+    } else {
+        centeredInput -= signum(centeredInput) * deadband;
+    }
+
+    const int32_t inScale = inHigh - inLow - 2 * deadband;
+    const int32_t outScale = outHigh - outLow;
+    const int32_t outCenter = avg(outLow, outHigh);
+
+    const int32_t outValue = centeredInput * outScale / inScale + outCenter;
+
+    return std::max(outLow, std::min(outHigh, outValue));
+}
+

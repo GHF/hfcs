@@ -86,6 +86,7 @@ CSRC = $(PORTSRC) \
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CPPSRC = src/main.cpp \
+		 src/HFCS.cpp \
 		 src/A4960.cpp \
 		 src/VNH5050A.cpp \
 
