@@ -133,8 +133,24 @@ void HFCS::icuPeriodCb(ICUDriver *icup) {
     instance->newPulse();
 }
 
+/**
+ * Negative absolute value. Used to avoid undefined behavior for most negative
+ * integer (see C99 standard 7.20.6.1.2 and footnote 265 for the description of
+ * abs/labs/llabs behavior).
+ *
+ * @param i 32-bit signed integer
+ * @return negative absolute value of i; defined for all values of i
+ */
 static inline int32_t nabs(int32_t i) {
+#if (((int32_t)-1) >> 1) == ((int32_t)-1)
+    // signed right shift sign-extends (arithmetic)
+    const int32_t negSign = ~(i >> 31); // splat sign bit into all 32 and complement
+    // if i is positive (negSign is -1), xor will invert i and sub will add 1
+    // otherwise i is unchanged
+    return (i ^ negSign) - negSign;
+#else
     return i < 0 ? i : -i;
+#endif
 }
 
 static inline int32_t avg(int32_t a, int32_t b) {
