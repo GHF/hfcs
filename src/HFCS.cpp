@@ -92,10 +92,10 @@ NORETURN void HFCS::failsafeLoop() {
         }
 
         if (palReadPad(GPIOC, GPIOC_M1_DIAG) == 0) {
-            m1.setMode(false);
+//            m1.setMode(false);
         }
 
-        chThdSleepMilliseconds(200);
+        chThdSleepMilliseconds(50);
     }
 }
 
@@ -162,4 +162,3 @@ int32_t HFCS::mapRanges(int32_t inLow, int32_t inHigh, int32_t inValue, int32_t 
 
     return std::max(outLow, std::min(outHigh, outValue));
 }
-
