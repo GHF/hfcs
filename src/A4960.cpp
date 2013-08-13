@@ -36,9 +36,9 @@ const uint16_t A4960::config[8] = {
         (0x0 << 10) | (0x6 << 6) | (0x14), // 50us comm blank time, 2.4us blank time, 1us deadtime
         (0x2 << 6) | (0x20), // Vri = 18.75% Vref, Vdsth = 800mV
         (0x08), // 22.8us current control off time
-        (0x0 << 8) | (0x3 << 4) | (0x2), // current limited, 25% current for hold, 18ms hold time
+        (0x0 << 8) | (0x3 << 4) | (0x4), // current limited, 25% current for hold, 34ms hold time
         (0x3 << 4) | (0x2), // 0.8ms min comm time, 24ms start comm time
-        (0x8 << 8) | (0x5 << 4) | (0x1), // 15deg phase adv, 37.5% ramp current, 0.4ms ramp rate
+        (0x2 << 8) | (0x5 << 4) | (0x1), // 3.75deg phase adv, 37.5% ramp current, 0.4ms ramp rate
         (0x0), // fault detection all on
         (0x0 << 10) | (0x3 << 7) | (0x0 << 6) | (0x0 << 4) | (0x1 << 3) | (0x0 << 2) | (0x0 << 1) | (0x0)
         // auto BEMF hyst, 3.2us zx det window, no stop on fail, DIAG pin = fault, restart on loss of sync, brake off, forward, coast
