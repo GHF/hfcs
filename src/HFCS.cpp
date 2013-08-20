@@ -138,7 +138,7 @@ void HFCS::icuPeriodCb(ICUDriver *icup) {
  * integer (see C99 standard 7.20.6.1.2 and footnote 265 for the description of
  * abs/labs/llabs behavior).
  *
- * @param i 32-bit signed integer
+ * @param i input value, as a 32-bit signed integer
  * @return negative absolute value of i; defined for all values of i
  */
 static inline int32_t nabs(int32_t i) {
@@ -153,8 +153,30 @@ static inline int32_t nabs(int32_t i) {
 #endif
 }
 
+/**
+ * Overflow-safe average of two signed integers. The naive average function is
+ * erroneous when the sum of the inputs overflows integer limits; this average
+ * works by summing the halves of the input values and then correcting the sum
+ * for rounding.
+ *
+ * @param a first value, as a 32-bit signed integer
+ * @param b second value, as a 32-bit signed integer
+ * @return signed average of the two values, rounded towards zero if their
+ * average is not an integer
+ */
 static inline int32_t avg(int32_t a, int32_t b) {
-    return (a + b) / 2;
+#if (((int32_t)-1) >> 1) != ((int32_t)-1)
+#error "Arithmetic right shift not available with this compiler/platform."
+#endif
+    // shifts divide by two, rounded towards negative infinity
+    const int32_t sumHalves = (a >> 1) + (b >> 1);
+    // this has error of magnitude one if both are odd
+    const uint32_t bothOdd = (a & b) & 1;
+    // round toward zero; add one if one input is odd and sum is negative
+    const uint32_t roundToZero = (sumHalves < 0) & (a ^ b);
+
+    // result is sum of halves corrected for rounding
+    return sumHalves + bothOdd + roundToZero;
 }
 
 static inline int32_t signum(int32_t i) {
