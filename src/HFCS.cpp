@@ -59,6 +59,7 @@ NORETURN void HFCS::fastLoop() {
 
     systime_t ticks = chTimeNow();
     while (true) {
+        palSetPad(GPIOA, GPIOA_LEDR);
         if (channelsValid) {
             constexpr int32_t INPUT_LOW = 1200;
             constexpr int32_t INPUT_HIGH = 1800;
@@ -82,6 +83,7 @@ NORETURN void HFCS::fastLoop() {
         }
 
         ticks += LOOP_DELAY;
+        palClearPad(GPIOA, GPIOA_LEDR);
         chThdSleepUntil(ticks);
     }
 }
