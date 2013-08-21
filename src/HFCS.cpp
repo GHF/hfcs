@@ -183,20 +183,42 @@ static inline int32_t signum(int32_t i) {
     return (i > 0) - (i < 0);
 }
 
+/**
+ * Proportionally map one range of values to another, with deadband. Care must
+ * be taken to not exceed integer limits in this computation!
+ *
+ * todo: describe exactly conditions for integer overflow errors
+ *
+ * @param inLow input range lower bound. inValue can not be less than this.
+ * @param inHigh input range upper bound. inValue can not exceed this.
+ * @param inValue input value to map
+ * @param outLow output range lower bound
+ * @param outHigh output range upper bound
+ * @param deadband distance from center of input range for which all input
+ *  values are mapped to zero
+ * @return mapped input value after adjusting for deadband
+ */
 int32_t HFCS::mapRanges(int32_t inLow, int32_t inHigh, int32_t inValue, int32_t outLow, int32_t outHigh, int32_t deadband) {
+    // center the input range on zero
     const int32_t inCenter = avg(inLow, inHigh);
     int32_t centeredInput = inValue - inCenter;
+
+    // cut away the deadband from the centered input
     if (nabs(centeredInput) > -deadband) {
         centeredInput = 0;
     } else {
         centeredInput -= signum(centeredInput) * deadband;
     }
 
+    // compute the length of input and output ranges
     const int32_t inScale = inHigh - inLow - 2 * deadband;
     const int32_t outScale = outHigh - outLow;
     const int32_t outCenter = avg(outLow, outHigh);
 
+    // scale by output to input ratio, then shift from zero into range
+    // WARNING: this computation can easily overflow!
     const int32_t outValue = centeredInput * outScale / inScale + outCenter;
 
+    // clamp output within range
     return std::max(outLow, std::min(outHigh, outValue));
 }
