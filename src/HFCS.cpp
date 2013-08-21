@@ -29,6 +29,7 @@
 #include "HFCS.h"
 #include "A4960.h"
 #include "VNH5050A.h"
+#include "L3GD20.h"
 
 #include <algorithm>
 
@@ -36,11 +37,12 @@ HFCS *HFCS::instance = NULL;
 icucnt_t HFCS::negativeWidth = 0;
 icucnt_t HFCS::positiveWidth = 0;
 
-HFCS::HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup) :
+HFCS::HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup, L3GD20 &gyro) :
                 m1(m1),
                 mLeft(mLeft),
                 mRight(mRight),
                 icup(icup),
+                gyro(gyro),
                 pulseWidths { },
                 currentPulse(0),
                 channels { },

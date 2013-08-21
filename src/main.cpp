@@ -29,6 +29,7 @@
 #include "HFCS.h"
 #include "A4960.h"
 #include "VNH5050A.h"
+#include "L3GD20.h"
 
 // heartbeat thread
 static WORKING_AREA(waHeartbeat, 128);
@@ -95,8 +96,20 @@ int main(void) {
     const ICUConfig icuConfig = { ICU_INPUT_ACTIVE_LOW, 1000000, HFCS::icuWidthCb, HFCS::icuPeriodCb };
     icuStart(&PPM_ICU, &icuConfig);
 
+    // gyro I2C setup
+    const I2CConfig i2cConfig = { OPMODE_I2C, 400000, FAST_DUTY_CYCLE_2 };
+    i2cStart(&GYRO_I2C, &i2cConfig);
+
+    // gyro setup
+    L3GD20 gyro(&GYRO_I2C);
+    gyro.setSELState(1);
+    gyro.enableDefault();
+    gyro.setFullScaleRange(2); // 2000 dps
+    gyro.setOutputDataRate(2); // 380 Hz
+    gyro.setBandwidth(2); // 100 Hz cut-off
+
     // initialize control loop
-    HFCS hfcs(m1, dcAB, dcXY, &PPM_ICU);
+    HFCS hfcs(m1, dcAB, dcXY, &PPM_ICU, gyro);
     HFCS::instance = &hfcs;
 
     // start slave threads

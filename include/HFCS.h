@@ -46,15 +46,18 @@
 
 #define PPM_ICU (ICUD2)
 
+#define GYRO_I2C (I2CD1)
+
 #define DBG_SERIAL (SD6)
 
 class A4960;
 class VNH5050A;
 struct ICUDriver;
+class L3GD20;
 
 class HFCS {
 public:
-    HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup);
+    HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup, L3GD20 &gyro);
 
     NORETURN void fastLoop();
     NORETURN void failsafeLoop();
@@ -68,6 +71,7 @@ protected:
     VNH5050A &mLeft;
     VNH5050A &mRight;
     ICUDriver * const icup;
+    L3GD20 &gyro;
 
     static constexpr size_t NUM_CHANNELS = 5;
     icucnt_t pulseWidths[NUM_CHANNELS];
