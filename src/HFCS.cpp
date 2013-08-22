@@ -34,6 +34,8 @@
 
 #include <algorithm>
 
+static inline int32_t nabs(int32_t i);
+
 HFCS *HFCS::instance = NULL;
 icucnt_t HFCS::negativeWidth = 0;
 icucnt_t HFCS::positiveWidth = 0;
@@ -50,16 +52,16 @@ HFCS::HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup, L3GD20
                 channels { },
                 channelsValid(false),
                 lastValidChannels(0),
-                gyroEnable(false) {
+                gyroEnable(true) {
                     instance = this;
 }
 
-static constexpr size_t LOOP_DELAY_US = 10000;
+static constexpr size_t LOOP_DELAY_US = 5000;
 static constexpr systime_t LOOP_DELAY = US2ST(LOOP_DELAY_US);
 
 void HFCS::init() {
-    constexpr float Kp = 1.f;
-    constexpr float Ki = 0.1f;
+    constexpr float Kp = 0.25f;
+    constexpr float Ki = 0.01f;
     constexpr float Kd = 0.f;
     constexpr float timeStepMS = LOOP_DELAY_US / 1000.f;
 
@@ -136,22 +138,46 @@ NORETURN void HFCS::fastLoop() {
 }
 
 inline void HFCS::gyroMotorControl() {
-    // todo: implement PID control for z-axis angular rate
-    mLeft.setSpeed(0);
-    mRight.setSpeed(0);
-
+    // map throttle to 3ph motor drive
     const int32_t throttle = mapRanges(INPUT_LOW, INPUT_HIGH, channels[2], 0, m1.getRange(), 0);
     m1.setWidth(throttle);
+
+    // map aileron to constant scaled into gyro rate range
+    constexpr int32_t rateRange = 720 * 32767 / 2000;
+    const int32_t aileron = mapRanges(INPUT_LOW, INPUT_HIGH, channels[0], -rateRange, rateRange, INPUT_DEADBAND);
+    const int32_t elevator = mapRanges(INPUT_LOW, INPUT_HIGH, channels[1], -dcOutRange, dcOutRange, INPUT_DEADBAND);
+
+    int16_t rates[3];
+    gyro.readGyro(&rates[0], &rates[1], &rates[2]);
+    // disable gyro correction if there's an error
+    if (gyro.error() != RDY_OK) {
+        gyroEnable = false;
+        return;
+    }
+    // correct for bias
+    for (size_t i = 0; i < 3; i++) {
+        rates[i] -= gyroBias[i];
+    }
+
+    gyroPID.setPoint = -aileron;
+    gyroPID.Run(rates[2]);
+    const int32_t zControl = gyroPID.output;
+
+    const int32_t left = std::min(std::max(elevator + zControl, -dcOutRange), dcOutRange);
+    const int32_t right = std::min(std::max(elevator - zControl, -dcOutRange), dcOutRange);
+
+    mLeft.setSpeed(nabs(left) < -DC_DEADBAND ? left : 0);
+    mRight.setSpeed(nabs(right) < -DC_DEADBAND ? right : 0);
 }
 
 inline void HFCS::manualMotorControl() {
-    const int32_t aileron = mapRanges(INPUT_LOW, INPUT_HIGH, channels[0], -dcOutRange, dcOutRange, DEADBAND);
-    const int32_t elevator = mapRanges(INPUT_LOW, INPUT_HIGH, channels[1], -dcOutRange, dcOutRange, DEADBAND);
+    const int32_t aileron = mapRanges(INPUT_LOW, INPUT_HIGH, channels[0], -dcOutRange, dcOutRange, INPUT_DEADBAND);
+    const int32_t elevator = mapRanges(INPUT_LOW, INPUT_HIGH, channels[1], -dcOutRange, dcOutRange, INPUT_DEADBAND);
 
     const int32_t left = std::min(std::max(elevator - aileron, -dcOutRange), dcOutRange);
     const int32_t right = std::min(std::max(elevator + aileron, -dcOutRange), dcOutRange);
-    mLeft.setSpeed(left);
-    mRight.setSpeed(right);
+    mLeft.setSpeed(nabs(left) < -DC_DEADBAND ? left : 0);
+    mRight.setSpeed(nabs(right) < -DC_DEADBAND ? right : 0);
 
     const int32_t throttle = mapRanges(INPUT_LOW, INPUT_HIGH, channels[2], 0, m1.getRange(), 0);
     m1.setWidth(throttle);

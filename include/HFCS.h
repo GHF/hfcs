@@ -91,7 +91,8 @@ protected:
 
     static constexpr int32_t INPUT_LOW = 1200;
     static constexpr int32_t INPUT_HIGH = 1800;
-    static constexpr int32_t DEADBAND = 17;
+    static constexpr int32_t INPUT_DEADBAND = 17;
+    static constexpr int32_t DC_DEADBAND = 10;
     static icucnt_t negativeWidth;
     static icucnt_t positiveWidth;
 
