@@ -102,7 +102,7 @@ int main(void) {
 
     // gyro setup
     L3GD20 gyro(&GYRO_I2C);
-    gyro.setSELState(1);
+    gyro.setSlaveAddrLSB(1);
     gyro.enableDefault();
     gyro.setFullScaleRange(2); // 2000 dps
     gyro.setOutputDataRate(2); // 380 Hz

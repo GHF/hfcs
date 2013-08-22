@@ -38,21 +38,30 @@ class L3GD20
 	public:
 		L3GD20(I2CDriver *i2cp);
 
-		uint8_t setSELState(uint8_t SELState);
-		void enableDefault() const;
-		void readGyro(int16_t *pX, int16_t *pY, int16_t *pZ) const;
-		void readTemperature(int8_t *temperature) const;
-		void setFullScaleRange(uint8_t fullScaleRange) const;
-		void setBandwidth(uint8_t bandwidth) const;
-		void setOutputDataRate(uint8_t dataRate) const;
+		void setSlaveAddrLSB(uint8_t lsb);
+		void enableDefault();
+		void readGyro(int16_t *pX, int16_t *pY, int16_t *pZ);
+		void readTemperature(int8_t *temperature);
+		void setFullScaleRange(uint8_t fullScaleRange);
+		void setBandwidth(uint8_t bandwidth);
+		void setOutputDataRate(uint8_t dataRate);
+
+		msg_t error() const {
+            return errFlag;
+        }
+
+		void resetError() {
+		    errFlag = RDY_OK;
+		}
 
 	protected:
-		bool writeReg(uint8_t reg, uint8_t value) const;
-		bool readReg(uint8_t reg, uint8_t *value) const;
+		void writeReg(uint8_t reg, uint8_t value);
+		uint8_t readReg(uint8_t reg);
 
 	protected:
 		I2CDriver * const i2cp;
 		i2caddr_t i2cAddr;
+		msg_t errFlag;
 };
 
 #endif /* L3GD20_H_ */
