@@ -110,7 +110,7 @@ int main(void) {
 
     // initialize control loop
     HFCS hfcs(m1, dcAB, dcXY, &PPM_ICU, gyro);
-    HFCS::instance = &hfcs;
+    hfcs.init();
 
     // start slave threads
     chThdCreateStatic(waHeartbeat, sizeof(waHeartbeat), IDLEPRIO, tfunc_t(threadHeartbeat), nullptr);

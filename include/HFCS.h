@@ -55,10 +55,13 @@ class VNH5050A;
 struct ICUDriver;
 class L3GD20;
 
+#include "Pid.hpp"
+
 class HFCS {
 public:
     HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup, L3GD20 &gyro);
 
+    void init();
     NORETURN void fastLoop();
     NORETURN void failsafeLoop();
 
@@ -76,12 +79,14 @@ protected:
     static constexpr size_t NUM_CHANNELS = 5;
     icucnt_t pulseWidths[NUM_CHANNELS];
     size_t currentPulse;
+    const int32_t dcOutRange;
 
     int32_t channels[NUM_CHANNELS];
     bool channelsValid;
     systime_t lastValidChannels;
 
     bool gyroEnable;
+    PidNs::Pid<float, float> gyroPID;
 
     static constexpr int32_t INPUT_LOW = 1200;
     static constexpr int32_t INPUT_HIGH = 1800;

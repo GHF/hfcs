@@ -30,6 +30,7 @@
 #include "A4960.h"
 #include "VNH5050A.h"
 #include "L3GD20.h"
+#include "Pid.hpp"
 
 #include <algorithm>
 
@@ -45,14 +46,34 @@ HFCS::HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup, L3GD20
                 gyro(gyro),
                 pulseWidths { },
                 currentPulse(0),
+                dcOutRange(mLeft.getRange()),
                 channels { },
                 channelsValid(false),
                 lastValidChannels(0),
                 gyroEnable(false) {
+                    instance = this;
 }
 
 static constexpr size_t LOOP_DELAY_US = 10000;
 static constexpr systime_t LOOP_DELAY = US2ST(LOOP_DELAY_US);
+
+void HFCS::init() {
+    constexpr float Kp = 1.f;
+    constexpr float Ki = 0.1f;
+    constexpr float Kd = 0.f;
+    constexpr float timeStepMS = LOOP_DELAY_US / 1000.f;
+
+    gyroPID.Init(
+        Kp,                                         // tuning constants
+        Ki,
+        Kd,
+        PidNs::Pid<float>::PID_DIRECT,              // feedback direction
+        PidNs::Pid<float>::DONT_ACCUMULATE_OUTPUT,  // rate or distance control
+        timeStepMS,                                 // time step size in ms
+        -dcOutRange,                                // output min
+        dcOutRange,                                 // output max
+        0.f);                                       // initial setpoint
+}
 
 NORETURN void HFCS::fastLoop() {
     icuEnable(icup);
@@ -87,7 +108,6 @@ inline void HFCS::gyroMotorControl() {
 }
 
 inline void HFCS::manualMotorControl() {
-    const int32_t dcOutRange = mLeft.getRange();
     const int32_t aileron = mapRanges(INPUT_LOW, INPUT_HIGH, channels[0], -dcOutRange, dcOutRange, DEADBAND);
     const int32_t elevator = mapRanges(INPUT_LOW, INPUT_HIGH, channels[1], -dcOutRange, dcOutRange, DEADBAND);
 
