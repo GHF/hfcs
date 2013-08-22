@@ -73,6 +73,43 @@ void HFCS::init() {
         -dcOutRange,                                // output min
         dcOutRange,                                 // output max
         0.f);                                       // initial setpoint
+
+    if (gyroEnable) {
+        // signal bias recording started
+        palClearPad(GPIOA, GPIOA_LEDQ);
+        palClearPad(GPIOA, GPIOA_LEDR);
+        // number of iterations to discard readings
+        constexpr size_t ignoreIters = 100 * 1000 / LOOP_DELAY_US;
+        // number of iterations to record for bias (specified as time)
+        constexpr size_t biasIters = 1500 * 1000 / LOOP_DELAY_US;
+        int16_t rates[3];
+        int32_t accumulatedRates[3] = { 0, 0, 0 };
+
+        systime_t ticks = chTimeNow();
+        for (size_t i = 0; i < biasIters + ignoreIters; i++) {
+            gyro.readGyro(&rates[0], &rates[1], &rates[2]);
+            if (gyro.error() != RDY_OK) {
+                // disable gyro mode if reading fails
+                gyroEnable = false;
+                break;
+            }
+
+            // discard the first <ignoreIters> results
+            if (i >= ignoreIters) {
+                // accumulate rates into array
+                for (size_t j = 0; j < 3; j++) {
+                    accumulatedRates[j] += rates[j];
+                }
+            }
+
+            ticks += LOOP_DELAY;
+            chThdSleepUntil(ticks);
+        }
+        // divide accumulated rates by iterations
+        for (size_t i = 0; i < 3; i++) {
+            gyroBias[i] = accumulatedRates[i] / int32_t(biasIters);
+        }
+    }
 }
 
 NORETURN void HFCS::fastLoop() {

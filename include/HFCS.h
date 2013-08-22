@@ -87,6 +87,7 @@ protected:
 
     bool gyroEnable;
     PidNs::Pid<float, float> gyroPID;
+    int16_t gyroBias[3];
 
     static constexpr int32_t INPUT_LOW = 1200;
     static constexpr int32_t INPUT_HIGH = 1800;
