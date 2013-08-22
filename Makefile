@@ -89,6 +89,7 @@ CPPSRC = src/main.cpp \
 		 src/HFCS.cpp \
 		 src/A4960.cpp \
 		 src/VNH5050A.cpp \
+		 src/L3GD20.cpp \
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
