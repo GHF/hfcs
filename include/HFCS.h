@@ -81,10 +81,19 @@ protected:
     bool channelsValid;
     systime_t lastValidChannels;
 
+    bool gyroEnable;
+
+    static constexpr int32_t INPUT_LOW = 1200;
+    static constexpr int32_t INPUT_HIGH = 1800;
+    static constexpr int32_t DEADBAND = 17;
     static icucnt_t negativeWidth;
     static icucnt_t positiveWidth;
 
     void newPulse();
+
+    void gyroMotorControl();
+    void manualMotorControl();
+    void disableMotors();
 
     bool checkPulseWidth(icucnt_t pulseWidth) const {
         if (pulseWidth > 2200 || pulseWidth < 800) {

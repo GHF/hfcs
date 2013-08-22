@@ -47,7 +47,8 @@ HFCS::HFCS(A4960 &m1, VNH5050A &mLeft, VNH5050A &mRight, ICUDriver *icup, L3GD20
                 currentPulse(0),
                 channels { },
                 channelsValid(false),
-                lastValidChannels(0) {
+                lastValidChannels(0),
+                gyroEnable(false) {
 }
 
 static constexpr size_t LOOP_DELAY_US = 10000;
@@ -61,31 +62,48 @@ NORETURN void HFCS::fastLoop() {
     while (true) {
         palSetPad(GPIOA, GPIOA_LEDR);
         if (channelsValid) {
-            constexpr int32_t INPUT_LOW = 1200;
-            constexpr int32_t INPUT_HIGH = 1800;
-            constexpr int32_t DEADBAND = 17;
-
-            const int32_t DC_OUTPUT_RANGE = mLeft.getRange();
-            const int32_t aileron = mapRanges(INPUT_LOW, INPUT_HIGH, channels[0], -DC_OUTPUT_RANGE, DC_OUTPUT_RANGE, DEADBAND);
-            const int32_t elevator = mapRanges(INPUT_LOW, INPUT_HIGH, channels[1], -DC_OUTPUT_RANGE, DC_OUTPUT_RANGE, DEADBAND);
-
-            const int32_t left = std::min(std::max(elevator - aileron, -DC_OUTPUT_RANGE), DC_OUTPUT_RANGE);
-            const int32_t right = std::min(std::max(elevator + aileron, -DC_OUTPUT_RANGE), DC_OUTPUT_RANGE);
-            mLeft.setSpeed(left);
-            mRight.setSpeed(right);
-
-            const int32_t throttle = mapRanges(INPUT_LOW, INPUT_HIGH, channels[2], 0, m1.getRange(), 0);
-            m1.setWidth(throttle);
+            if (gyroEnable) {
+                gyroMotorControl();
+            } else {
+                manualMotorControl();
+            }
         } else {
-            m1.setWidth(0);
-            mLeft.setSpeed(0);
-            mRight.setSpeed(0);
+            disableMotors();
         }
 
         ticks += LOOP_DELAY;
         palClearPad(GPIOA, GPIOA_LEDR);
         chThdSleepUntil(ticks);
     }
+}
+
+inline void HFCS::gyroMotorControl() {
+    // todo: implement PID control for z-axis angular rate
+    mLeft.setSpeed(0);
+    mRight.setSpeed(0);
+
+    const int32_t throttle = mapRanges(INPUT_LOW, INPUT_HIGH, channels[2], 0, m1.getRange(), 0);
+    m1.setWidth(throttle);
+}
+
+inline void HFCS::manualMotorControl() {
+    const int32_t dcOutRange = mLeft.getRange();
+    const int32_t aileron = mapRanges(INPUT_LOW, INPUT_HIGH, channels[0], -dcOutRange, dcOutRange, DEADBAND);
+    const int32_t elevator = mapRanges(INPUT_LOW, INPUT_HIGH, channels[1], -dcOutRange, dcOutRange, DEADBAND);
+
+    const int32_t left = std::min(std::max(elevator - aileron, -dcOutRange), dcOutRange);
+    const int32_t right = std::min(std::max(elevator + aileron, -dcOutRange), dcOutRange);
+    mLeft.setSpeed(left);
+    mRight.setSpeed(right);
+
+    const int32_t throttle = mapRanges(INPUT_LOW, INPUT_HIGH, channels[2], 0, m1.getRange(), 0);
+    m1.setWidth(throttle);
+}
+
+inline void HFCS::disableMotors() {
+    m1.setWidth(0);
+    mLeft.setSpeed(0);
+    mRight.setSpeed(0);
 }
 
 NORETURN void HFCS::failsafeLoop() {
